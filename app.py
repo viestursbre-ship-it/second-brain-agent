@@ -1,5 +1,5 @@
 """
-Second Brain Agent - Streamlit Desktop App Interface
+Second Brain Agent - Multi-format Desktop App Interface
 """
 
 import os
@@ -22,9 +22,9 @@ with st.sidebar:
 # 1. Solis: Failu ielāde (Drop Zone)
 st.subheader("📁 1. solis: Ielādē savus parauga dokumentus")
 uploaded_files = st.file_uploader(
-    "Ievelc iepriekšējos failus (.docx, .pdf, .xlsx, .txt, .md)",
+    "Ievelc šeit iepriekšējos failus (.docx, .pdf, .xlsx, .txt, .md)", 
     accept_multiple_files=True,
-    type=["docx", "pdf", "xlsx", "txt", "md"],
+    type=["docx", "pdf", "xlsx", "txt", "md"]
 )
 
 # Saglabājam sesijas atmiņā stila profilu
@@ -33,15 +33,22 @@ if "style_profile" not in st.session_state:
 
 if uploaded_files and api_key:
     if st.button("🔍 Analizēt manu Stila DNA"):
-        with st.spinner("Sintezējam Tavu rokrakstu un struktūras paradumus..."):
-            doc_texts = [
-    DocumentScanner.extract_text_from_file(file) for file in uploaded_files
-]
+        with st.spinner("Sintezējam Tavu rokrakstu, struktūru un paradumus..."):
             try:
-                brain = SecondBrain(api_key=api_key)
-                profile = brain.extract_style_profile(doc_texts)
-                st.session_state.style_profile = profile
-                st.success("✅ Stila profils veiksmīgi izveidots!")
+                doc_texts = [
+                    DocumentScanner.extract_text_from_file(file) 
+                    for file in uploaded_files
+                ]
+                # Filtrējam tukšos failus
+                doc_texts = [text for text in doc_texts if text.strip()]
+                
+                if not doc_texts:
+                    st.warning("Failos netika atrasts teksts!")
+                else:
+                    brain = SecondBrain(api_key=api_key)
+                    profile = brain.extract_style_profile(doc_texts)
+                    st.session_state.style_profile = profile
+                    st.success(f"✅ Stila profils veiksmīgi izveidots no {len(doc_texts)} failiem!")
             except Exception as e:
                 st.error(f"Kļūda: {e}")
 
@@ -54,7 +61,7 @@ if st.session_state.style_profile:
     st.subheader("✍️ 2. solis: Ģenerē jaunu karkasu")
     task_input = st.text_area(
         "Ko Tev nepieciešams sagatavot?", 
-        placeholder="Piemēram: Sagatavo komercpiedāvājumu jaunam klientam par telpu dizaina izstrādi..."
+        placeholder="Piemēram: Sagatavo komercpiedāvājumu jaunam klientam par medicīnisko treileru apkopi..."
     )
 
     if st.button("⚡ Izveidot melnrakstu"):
@@ -63,6 +70,9 @@ if st.session_state.style_profile:
                 brain = SecondBrain(api_key=api_key)
                 draft = brain.generate_draft(task_description=task_input, style_profile=st.session_state.style_profile)
                 st.subheader("📑 Rezultāts:")
+                st.markdown(draft)
+        else:
+            st.warning("Lūdzu, ievadi uzdevuma aprakstu!")
                 st.markdown(draft)
         else:
             st.warning("Lūdzu, ievadi uzdevuma aprakstu!")
