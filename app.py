@@ -39,7 +39,6 @@ if uploaded_files and api_key:
                     DocumentScanner.extract_text_from_file(file) 
                     for file in uploaded_files
                 ]
-                # Filtrējam tukšos failus
                 doc_texts = [text for text in doc_texts if text.strip()]
                 
                 if not doc_texts:
@@ -61,7 +60,7 @@ if st.session_state.style_profile:
     st.subheader("✍️ 2. solis: Ģenerē jaunu karkasu")
     task_input = st.text_area(
         "Ko Tev nepieciešams sagatavot?", 
-        placeholder="Piemēram: Sagatavo komercpiedāvājumu jaunam klientam par medicīnisko treileru apkopi..."
+        placeholder="Piemēram: Sagatavo komercpiedāvājumu jaunam klientam..."
     )
 
     if st.button("⚡ Izveidot melnrakstu"):
@@ -70,9 +69,6 @@ if st.session_state.style_profile:
                 brain = SecondBrain(api_key=api_key)
                 draft = brain.generate_draft(task_description=task_input, style_profile=st.session_state.style_profile)
                 st.subheader("📑 Rezultāts:")
-                st.markdown(draft)
-        else:
-            st.warning("Lūdzu, ievadi uzdevuma aprakstu!")
                 st.markdown(draft)
         else:
             st.warning("Lūdzu, ievadi uzdevuma aprakstu!")
