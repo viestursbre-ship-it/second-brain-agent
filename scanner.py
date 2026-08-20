@@ -1,61 +1,45 @@
 """
-Second Brain Agent - Document Ingestion & Style Scanner
-Extracts text from user documents (DOCX, PDF, TXT) and analyzes Tone of Voice & Structure DNA.
+Second Brain Agent - Multi-format Document Scanner (.txt, .md, .pdf, .docx, .xlsx)
 """
 
-import os
 from pathlib import Path
+import docx
+from openpyxl import load_workbook
+from pypdf import PdfReader
 
 
 class DocumentScanner:
 
-  def __init__(self, dropzone_path: str = "./dropzone"):
-    self.dropzone_path = Path(dropzone_path)
-    self.dropzone_path.mkdir(parents=True, exist_ok=True)
+  @staticmethod
+  def extract_text_from_file(uploaded_file) -> str:
+    filename = uploaded_file.name.lower()
 
-  def read_text_file(self, file_path: Path) -> str:
-    """Reads a plain text file."""
-    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-      return f.read()
+    # 1. TXT / MD
+    if filename.endswith((".txt", ".md")):
+      return uploaded_file.read().decode("utf-8", errors="ignore")
 
-  def scan_documents(self) -> list[dict]:
-    """Scans all documents in the dropzone folder."""
-    extracted_data = []
+    # 2. PDF
+    elif filename.endswith(".pdf"):
+      reader = PdfReader(uploaded_file)
+      return "\n".join([page.extract_text() or "" for page in reader.pages])
 
-    for file_path in self.dropzone_path.glob("*"):
-      if file_path.suffix.lower() in [".txt", ".md"]:
-        content = self.read_text_file(file_path)
-        extracted_data.append({
-            "filename": file_path.name,
-            "type": file_path.suffix.lower(),
-            "content": content,
-            "char_count": len(content),
-        })
+    # 3. Word (.docx)
+    elif filename.endswith(".docx"):
+      doc = docx.Document(uploaded_file)
+      return "\n".join([p.text for p in doc.paragraphs if p.text.strip()])
 
-    return extracted_data
+    # 4. Excel (.xlsx)
+    elif filename.endswith(".xlsx"):
+      wb = load_workbook(uploaded_file, data_only=True)
+      lines = []
+      for sheet in wb.sheetnames:
+        ws = wb[sheet]
+        for row in ws.iter_rows(values_only=True):
+          row_vals = [
+              str(val) for val in row if val is not None and str(val).strip()
+          ]
+          if row_vals:
+            lines.append(" | ".join(row_vals))
+      return "\n".join(lines)
 
-  def analyze_style_dna(self, documents: list[dict]) -> dict:
-    """Basic analysis of structure patterns and keywords across ingested documents."""
-    total_docs = len(documents)
-    if total_docs == 0:
-      return {"status": "No documents found in dropzone"}
-
-    sample_preview = [
-        f"{doc['filename']} ({doc['char_count']} chars)" for doc in documents
-    ]
-
-    return {
-        "status": "Ready",
-        "total_documents": total_docs,
-        "processed_files": sample_preview,
-        "summary": "Document Ingestion module operational. Ready for LLM memory synthesis.",
-    }
-
-
-if __name__ == "__main__":
-  scanner = DocumentScanner()
-  print("🧠 [Second Brain Agent] Scanner initialized.")
-  docs = scanner.scan_documents()
-  profile = scanner.analyze_style_dna(docs)
-  print(f"📊 Status: {profile['status']}")
-  print(f"📁 Processed files: {profile.get('processed_files', [])}")
+    return ""
