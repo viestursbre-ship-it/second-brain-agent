@@ -22,9 +22,9 @@ with st.sidebar:
 # 1. Solis: Failu ielāde (Drop Zone)
 st.subheader("📁 1. solis: Ielādē savus parauga dokumentus")
 uploaded_files = st.file_uploader(
-    "Ievelc šeit iepriekšējos piedāvājumus vai piezīmes (.txt, .md)", 
+    "Ievelc iepriekšējos failus (.docx, .pdf, .xlsx, .txt, .md)",
     accept_multiple_files=True,
-    type=["txt", "md"]
+    type=["docx", "pdf", "xlsx", "txt", "md"],
 )
 
 # Saglabājam sesijas atmiņā stila profilu
