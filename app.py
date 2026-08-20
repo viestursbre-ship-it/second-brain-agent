@@ -34,7 +34,9 @@ if "style_profile" not in st.session_state:
 if uploaded_files and api_key:
     if st.button("🔍 Analizēt manu Stila DNA"):
         with st.spinner("Sintezējam Tavu rokrakstu un struktūras paradumus..."):
-            doc_texts = [file.read().decode("utf-8", errors="ignore") for file in uploaded_files]
+            doc_texts = [
+    DocumentScanner.extract_text_from_file(file) for file in uploaded_files
+]
             try:
                 brain = SecondBrain(api_key=api_key)
                 profile = brain.extract_style_profile(doc_texts)
